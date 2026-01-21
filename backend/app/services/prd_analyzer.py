@@ -115,7 +115,7 @@ async def analyze_prd(db: Session, project_id: int) -> Project:
     db.commit()
 
     try:
-        llm = get_llm_provider()
+        llm = get_llm_provider(db)
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
             {

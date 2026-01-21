@@ -201,7 +201,7 @@ async def analyze_lifecycle(
     if start_date is None:
         start_date = date.today()
 
-    llm = get_llm_provider()
+    llm = get_llm_provider(db)
     messages = [
         {"role": "system", "content": LIFECYCLE_SYSTEM_PROMPT},
         {

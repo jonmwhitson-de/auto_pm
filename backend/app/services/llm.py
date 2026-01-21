@@ -1,7 +1,20 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Optional
 import json
+from sqlalchemy.orm import Session
 from app.core.config import settings
+
+
+def get_db_setting(db: Optional[Session], key: str, default: Any = None) -> Any:
+    """Get a setting from the database, falling back to environment config."""
+    if db is None:
+        return default
+
+    from app.models import SystemSettings
+    setting = db.query(SystemSettings).filter(SystemSettings.key == key).first()
+    if setting and setting.value:
+        return setting.value
+    return default
 
 
 class LLMProvider(ABC):
@@ -359,18 +372,24 @@ class StubLLMProvider(LLMProvider):
 class AzureOpenAIProvider(LLMProvider):
     """Azure OpenAI LLM provider."""
 
-    def __init__(self):
+    def __init__(self, db: Optional[Session] = None):
         from openai import AsyncAzureOpenAI
 
-        if not settings.azure_openai_api_key or not settings.azure_openai_endpoint:
+        # Read from database first, fall back to environment
+        api_key = get_db_setting(db, "azure_openai_api_key", settings.azure_openai_api_key)
+        endpoint = get_db_setting(db, "azure_openai_endpoint", settings.azure_openai_endpoint)
+        deployment = get_db_setting(db, "azure_openai_deployment", settings.azure_openai_deployment)
+        api_version = settings.azure_openai_api_version
+
+        if not api_key or not endpoint:
             raise ValueError("Azure OpenAI API key and endpoint must be configured")
 
         self.client = AsyncAzureOpenAI(
-            api_key=settings.azure_openai_api_key,
-            api_version=settings.azure_openai_api_version,
-            azure_endpoint=settings.azure_openai_endpoint,
+            api_key=api_key,
+            api_version=api_version,
+            azure_endpoint=endpoint,
         )
-        self.deployment = settings.azure_openai_deployment
+        self.deployment = deployment
 
     async def complete(self, messages: list[dict], tools: list[dict] | None = None) -> dict:
         kwargs = {"model": self.deployment, "messages": messages}
@@ -399,8 +418,11 @@ class AzureOpenAIProvider(LLMProvider):
         return result["content"], result["tool_calls"]
 
 
-def get_llm_provider() -> LLMProvider:
+def get_llm_provider(db: Optional[Session] = None) -> LLMProvider:
     """Factory function to get the configured LLM provider."""
-    if settings.llm_provider == "azure_openai":
-        return AzureOpenAIProvider()
+    # Check database setting first, fall back to environment
+    provider = get_db_setting(db, "llm_provider", settings.llm_provider)
+
+    if provider == "azure_openai":
+        return AzureOpenAIProvider(db)
     return StubLLMProvider()

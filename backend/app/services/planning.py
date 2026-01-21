@@ -234,7 +234,7 @@ For each dependency, explain:
         }
     ]
 
-    llm = get_llm_provider()
+    llm = get_llm_provider(db)
     _, tool_calls = await llm.complete_with_tools(messages, tools)
 
     created_deps = []
@@ -325,7 +325,7 @@ Provide P10/P50/P90 estimates in hours."""
         }
     ]
 
-    llm = get_llm_provider()
+    llm = get_llm_provider(db)
     _, tool_calls = await llm.complete_with_tools(messages, tools)
 
     # Get or create estimate
@@ -438,7 +438,7 @@ For each assumption, capture the assumption, its impact if wrong, and suggested 
         }
     ]
 
-    llm = get_llm_provider()
+    llm = get_llm_provider(db)
     _, tool_calls = await llm.complete_with_tools(messages, tools)
 
     created_decisions = []

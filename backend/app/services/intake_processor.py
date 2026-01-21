@@ -241,7 +241,7 @@ async def process_intake(db: Session, intake_id: int) -> Intake:
     db.commit()
 
     try:
-        llm = get_llm_provider()
+        llm = get_llm_provider(db)
 
         # Step 1: Extract PM Brief
         await _extract_pm_brief(db, intake, llm)
