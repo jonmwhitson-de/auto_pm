@@ -20,12 +20,12 @@ def upgrade() -> None:
         'dependencies',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('project_id', sa.Integer(), nullable=False),
-        sa.Column('source_type', sa.Enum('epic', 'story', 'task', name='itemtype'), nullable=False),
+        sa.Column('source_type', sa.String(20), nullable=False),
         sa.Column('source_id', sa.Integer(), nullable=False),
-        sa.Column('target_type', sa.Enum('epic', 'story', 'task', name='itemtype'), nullable=False),
+        sa.Column('target_type', sa.String(20), nullable=False),
         sa.Column('target_id', sa.Integer(), nullable=False),
-        sa.Column('dependency_type', sa.Enum('blocks', 'depends_on', 'related', name='dependencytype'), nullable=True),
-        sa.Column('status', sa.Enum('pending', 'in_progress', 'resolved', 'blocked', name='dependencystatus'), nullable=True),
+        sa.Column('dependency_type', sa.String(20), nullable=True),
+        sa.Column('status', sa.String(20), nullable=True),
         sa.Column('inferred', sa.Boolean(), nullable=True),
         sa.Column('confidence', sa.Float(), nullable=True),
         sa.Column('inference_reason', sa.Text(), nullable=True),
@@ -48,7 +48,7 @@ def upgrade() -> None:
         sa.Column('rationale', sa.Text(), nullable=True),
         sa.Column('alternatives', sa.Text(), nullable=True),
         sa.Column('consequences', sa.Text(), nullable=True),
-        sa.Column('status', sa.Enum('proposed', 'accepted', 'superseded', 'deprecated', name='decisionstatus'), nullable=True),
+        sa.Column('status', sa.String(20), nullable=True),
         sa.Column('decision_maker', sa.String(length=255), nullable=True),
         sa.Column('decision_date', sa.DateTime(timezone=True), nullable=True),
         sa.Column('extracted_from', sa.String(length=50), nullable=True),
@@ -68,8 +68,8 @@ def upgrade() -> None:
         sa.Column('assumption', sa.Text(), nullable=False),
         sa.Column('context', sa.Text(), nullable=True),
         sa.Column('impact_if_wrong', sa.Text(), nullable=True),
-        sa.Column('status', sa.Enum('unvalidated', 'validating', 'validated', 'invalidated', name='assumptionstatus'), nullable=True),
-        sa.Column('risk_level', sa.Enum('low', 'medium', 'high', 'critical', name='assumptionrisk'), nullable=True),
+        sa.Column('status', sa.String(20), nullable=True),
+        sa.Column('risk_level', sa.String(20), nullable=True),
         sa.Column('validation_method', sa.Text(), nullable=True),
         sa.Column('validation_owner', sa.String(length=255), nullable=True),
         sa.Column('validation_deadline', sa.DateTime(timezone=True), nullable=True),
@@ -129,11 +129,3 @@ def downgrade() -> None:
     op.drop_table('decisions')
     op.drop_index(op.f('ix_dependencies_id'), table_name='dependencies')
     op.drop_table('dependencies')
-
-    # Drop enums
-    op.execute("DROP TYPE IF EXISTS itemtype")
-    op.execute("DROP TYPE IF EXISTS dependencytype")
-    op.execute("DROP TYPE IF EXISTS dependencystatus")
-    op.execute("DROP TYPE IF EXISTS decisionstatus")
-    op.execute("DROP TYPE IF EXISTS assumptionstatus")
-    op.execute("DROP TYPE IF EXISTS assumptionrisk")
