@@ -4,7 +4,10 @@ from sqlalchemy import func
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date, datetime, timedelta
+import logging
 from app.core.database import get_db
+
+logger = logging.getLogger(__name__)
 from app.models import (
     Project, OfferLifecyclePhase, ServiceTask,
     LifecyclePhase, PhaseStatus, ServiceTaskStatus, TaskSource
@@ -150,6 +153,9 @@ async def analyze_project_lifecycle(
         return _build_phase_responses(db, phases)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception(f"Error analyzing lifecycle for project {request.project_id}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/projects/{project_id}", response_model=LifecycleSummary)

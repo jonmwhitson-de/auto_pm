@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+import logging
 
 from app.core.database import get_db
 from app.models import Project
 from app.services.prd_analyzer import analyze_prd
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -32,4 +35,5 @@ async def analyze_project(request: AnalyzeRequest, db: Session = Depends(get_db)
             project_id=request.project_id,
         )
     except Exception as e:
+        logger.exception(f"Error analyzing project {request.project_id}")
         raise HTTPException(status_code=500, detail=str(e))
